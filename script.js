@@ -3,6 +3,10 @@
 //Base class
 function Shape() {}
 
+Shape.prototype.double = function () {
+  this.scale(2);
+}
+
 //Rectangle Class
 Rectangle.prototype = new Shape();
 Rectangle.prototype.constructor = Rectangle;
@@ -32,6 +36,12 @@ Rectangle.prototype.stroke = function(ctx, strokeStyle, lineWidth) {
   ctx.lineWidth = lineWidth;
   ctx.strokeRect(this.x,this.y,this.w,this.h)
 }
+
+Rectangle.prototype.scale = function (factor) {
+  this.w= this.w*factor;
+  this.h = this.h*factor;
+}
+
 
 //Class Circle
 Circle.prototype = new Shape();
@@ -71,6 +81,9 @@ Circle.prototype.stroke = function(ctx, strokeStyle, lineWidth) {
   ctx.stroke();
 }
 
+Circle.prototype.scale = function (factor) {
+  this.w = this.w*factor;
+}
 Text.prototype = new Shape();
 Text.prototype.constructor = Text;
 function Text (x, y, font, fill, content) {
@@ -184,6 +197,30 @@ function CanvasState(canvas) {
   }, true);
   canvas.addEventListener('mouseup', function(e) {
     myState.dragging = false;
+  }, true);
+  canvas.addEventListener('dblclick', function(e) {
+    var mouse = myState.getMouse(e);
+    var mx = mouse.x;
+    var my = mouse.y;
+    var shapes = myState.shapes;
+    var l = shapes.length;
+    for (var i = l-1; i >= 0; i--) {
+      if (shapes[i].contains(mx, my)) {
+        var mySel = shapes[i];
+        // Keep track of where in the object we clicked
+        // so we can move it smoothly (see mousemove)
+        myState.selection = mySel;
+        mySel.double();
+        myState.valid = false;
+        return;
+      }
+    }
+    // havent returned means we have failed to select anything.
+    // If there was an object selected, we deselect it
+    if (myState.selection) {
+      myState.selection = null;
+      myState.valid = false; // Need to clear the old selection border
+    }
   }, true);
   
   // **** Options! ****
